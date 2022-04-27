@@ -1,0 +1,542 @@
+WordPress Tutorial
+this tutorial assumes we have a theme and we just want to convert to wordpress
+-----------------------------------------------------------------------------------------------------------------------------
+wordpress only requires a css and an index.php file to function, other files are not mandatory, but of course no one makes a wp theme with just those two files!
+make a style.css file and at the top, add this =>
+
+/*
+Theme Name: FollowAndrew
+Text Domain: FollowAndrew
+Version: 1.0
+Description: Fancy Left Sidebar Theme
+Tags: Left-sidebar, responsive, fancy
+Author: Andrew Wilson
+Author URI: https://x.com
+*/
+
+this is showed in the "themes" tab in the appearance settings of the wordpress.
+-----------------------------------------------------------------------------------------------------------------------------
+files that are usually created (and we're gonna use in this tutorial) in the theme folder are:
+404.php, archive.php, comments.php, footer.php, front-page.php, functions.php, header.php, index.php, page.php, readme.txt, screenshot.png, search.php, single.php, style.css
+
+and the folders inside the theme folder are:
+assets(which contains these folders => css, fonts, images, js), classes, inc, template-parts, templates
+
+now copy your css in the style.css file in theme directory
+-----------------------------------------------------------------------------------------------------------------------------
+Front-page.php -> copy your index.php into this files. now go to the <head> in front-page.php and add this function right below the css lines:
+<?php
+	wp_head();
+?>
+this way wp will dynamically load your css for you
+-----------------------------------------------------------------------------------------------------------------------------
+Functions.php => so we told wordpress to load our css, but now we have to go to functions.php and make it work, so add this to functions.php:
+
+<?php
+
+function followandrew_register_styles() {
+
+    $version = wp_get_theme() ->get( 'Version' );
+    wp_enqueue_style('followandrew-style', get_template_directory_uri() . "/style.css", array('followandrew-bootstrap'), $version, 'all' );
+    wp_enqueue_style('followandrew-bootstrap', "https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css", array(), '4.4.1', 'all' );
+    wp_enqueue_style('followandrew-fontawesome', "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.0/css/all.min.css", array(), '5.13.0', 'all' );
+
+}
+
+add_action('wp_enqueue_scripts', 'followandrew_register_styles');
+
+?>
+
+needless to say, "followandrew" here is the optional name and we can change that according to our blog name
+"get_template_directory()" gets the address to the directory of our theme.
+because our main style is dependant to bootstrap, in the "array()" we add the id of the bootstrap function below located below it.
+$version is a php variable that we are assigning it a function to get the style version written in the css file. for the other two we just copy the written version obv.
+and the "add_action" is a wp function that says "whenever you run the scripts, run my functions too.
+Now we can delete all the css lines in the <head>
+-----------------------------------------------------------------------------------------------------------------------------
+now go to the footer section of the front-page.php and right below the footer js lines, add this:
+<?php
+	wp_footer();
+?>
+and this will tell wp to load our js files, but again we need to define it in the function.php, just add it right below the "add_action" from previous lines:
+
+function followandrew_register_scripts() {
+
+    wp_enqueue_script( 'followandrew-jquery', 'https://code.jquery.com/jquery-3.4.1.slim.min.js', array(), '3.4.1', true);
+    wp_enqueue_script( 'followandrew-popper', 'https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js', array(), '1.16.0', true);
+    wp_enqueue_script( 'followandrew-bootstrap', 'https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js', array(), '4.4.1', true);
+    wp_enqueue_script( 'followandrew-main', get_template_directory_uri() . "/assets/js/main.js", array(), '1.0', true);
+
+}
+
+add_action('wp_enqueue_scripts', 'followandrew_register_scripts');
+
+here the last variable "true" means "load the js in the footer". the default value is "false".
+now we can also delete all the js lines in the footer of our front-page.
+
+-----------------------------------------------------------------------------------------------------------------------------
+Now it's time to split our header and footer into the corresponding file. it's up to you to decide which part needs to be in the header and footer.
+so just cut the header and paste it in the header.php file, now in front-page.php we tell the wp to dynamically load it for us, place this in place of the header:
+<?php
+	get_header();
+?>
+now for the footer do the same thing, cut the footer lines and paste in the footer.php file, and in it's place, add this:
+<?php
+	get_footer();
+?>
+-----------------------------------------------------------------------------------------------------------------------------
+Title tag => now we make the title tag in our header dynamic. go to header.php file and just delete the  "<title>Blog Site Template</title>" line.
+now go to the functions.php and at the top right below the opening "<?php" line add this:
+
+function followandrew_theme_support() {
+
+    add_theme_support( 'title-tag' );
+
+}
+
+add_action( 'after_setup_theme', 'followandrew_theme_support' );
+
+now wp will dynamically get the title that user writes in the wp settings panel.
+-----------------------------------------------------------------------------------------------------------------------------
+now check the maximum width defined for your main content, and go to wordpress thumbnail settings and in the three size options, the biggest value should not exceed
+your content width. "let's hope later i will add the functions used to change and add more custom size options via the functions.php file, here"
+-----------------------------------------------------------------------------------------------------------------------------
+Content Loop => before anything, lets make a page in wp panel called anything, for example "Home Sweet Home", with a simple content like "Content"
+just for test purposes. now go to settings -> reading and select "your homepage displays -> a static page -> Home Sweet Home". this tells wp to load the page
+as our front page. now let's get wp to load our main content for us, for this we can delete all the hardcoded content in front-page.php and just leave
+the content container. now to loop through the posts in our wp database, we add this code into the container:
+
+<?php
+
+	if( have_posts() ) {
+					
+		while( have_posts() ) {
+
+			the_post();
+			the_content();
+
+		}
+
+	}
+
+?>
+
+"if( have_posts() )" will initiate only if we have any posts, "while( have_posts() )" is the loop function wp uses, and it will loop through posts one by one.
+"the_post();" will grab the post, and then we can use other functions like "the_content();" which will grab the actual content of that post. we will add 
+more later. now refresh the page and test the changes.
+-----------------------------------------------------------------------------------------------------------------------------
+Navigation Menus => now let's replace hardcoded nav menus with dynamic wp ones. we could have more than one menu bar, and in this tutorial we're adding two.
+go to functions.php and below the "title-tag" function add this:
+
+function followandrew_menus() {
+
+    $locations = array(
+        'primary' => 'Desktop Primary Left Sidebar',
+        'footer' => 'Footer Menu Items'
+    );
+
+    register_nav_menus( $locations );
+
+}
+
+add_action( 'init', 'followandrew_menus' );
+
+so here "primary" is the optional name we chose for our primary menu and "Desktop Primary Left Sidebar" is the description of it. and the same for the footer.
+"register_nav_menus( $locations );" will register the added menus to wp, and "add_action( 'init', 'followandrew_menus' );" will run our function alongside the
+"init" which happens early in wp.
+now go to wp admin panel and create a few pages so we put them in our menu items. then go to => appearances => menus (menus item didn't exist before we defined it)
+and add a menu for example called "Main Menu", add the pages to it, now you'll see that we can assign it to one of the two menu locations we created, assign it
+to 'Desktop Primary Left Sidebar' and save.
+now go to header.php file and right above the menu "<ul>" container, add this :
+
+<?php
+	wp_nav_menu(
+		array(
+			'menu' => 'primary',
+			'container' => '',
+			'theme_location' => 'primary',
+			'items_wrap' => '<ul id="" class="navbar-nav flex-column text-sm-center text-md-left">%3$s</ul>'
+		)
+	);
+?>
+
+so here the names are NOT optional ('menu', 'container' etc.) and the value "primary" will assign this menu to the primary menu that we defined in functions.
+because we are going to delete our hardcoded menu and replace them with dynamic ones, that means we can't use our own containers and class. so in 'items_wrap'
+we can assign a "<ul>" with our own attributes, and wp will apply them ( don't forget the %3$s inside the container), but for all the <li> inside, there is no
+way to assign our attributes (we need to learn "custom walkers" for that), se we go to wp admin panel => appearances => menus and at the top of wp in "screen options"
+we enable "css classes". now go to the items in the menu, drop them down, there is a css class section. here you can copy your <li> class(es). for example
+copy this => nav-item <= no need for "".
+and if we have Icons for our items inside the <li> we can copy them inside wp panel => appearances => menus => drop down any of the menu items, and in "navigation label"
+right before the item name, we add the icon code. for example => "<i class="fas fa-home fa-fw mr-2"></i>Home Page".
+we're with menus for now. we can now delete our hardcoded <ul> container.
+-----------------------------------------------------------------------------------------------------------------------------
+Favicon => we're not gonna make favicons dynamic in this short tutorial, so first copy your "logo.png" into  "/assets/images/logo.png" and then open header.png
+and in the <head> section find the favicon line, it should look like this =>  "<link rel="shortcut icon" href="/assets/images/logo.png">", and we just want to
+change the address according to our wp theme directory => " <link rel="shortcut icon" href="/wp-content/themes/followandrew/assets/images/logo.png"> ". Done!
+-----------------------------------------------------------------------------------------------------------------------------
+Logo => here we wanna make our site logo dynamic, firs go to functions.php and add custom logo support, under the tile-tag, it should now look like this;
+
+function followandrew_theme_support() {
+
+    add_theme_support( 'title-tag' );
+    add_theme_support( 'custom-logo' ); 
+
+}
+
+add_action( 'after_setup_theme', 'followandrew_theme_support' );
+
+now go to wp panel => appearance => themes and click "customize" on your theme thumbnail, now click "site-identity" and upload your logo. now go to header.php and
+right above your logo <img> tag open this php line:
+
+<?php
+	if( function_exists( 'the_custom_logo' ) ) {
+		$custom_logo_id = get_theme_mod( 'custom_logo' );
+		$logo = wp_get_attachment_image_src( $custom_logo_id );
+	};
+?>
+ this code will just get the address of our uploader logo image, now replace the hardcoded address in your <img> tag with our php code to output the variable:
+ 
+ <img class="mb-3 mx-auto logo" src="<?php echo $logo[0] ?>" alt="logo" >
+ 
+ we execute "$logo[0]" because we actually get an array, containing the address and then the image size.
+-----------------------------------------------------------------------------------------------------------------------------
+Site Name => this is easy, go to header.php again, find the tag containing your site name and delete the hardcoded name and replace with this code:
+
+<?php
+	echo get_bloginfo( 'name' );
+?>
+
+now to change your site name dynamically go to wp panel => appearances => themes => customize => site identity.
+-----------------------------------------------------------------------------------------------------------------------------
+Thumbnail support => to add pictures to your posts, go to functions.php and right below the previous supports, add a thumbnail support, like this:
+
+function followandrew_theme_support() {
+
+    add_theme_support( 'title-tag' );
+    add_theme_support( 'custom-logo' );
+    add_theme_support( 'post-thumbnails' );
+
+}
+
+now you can add pics to your posts, to customize different sizes we need to add more functions which we're not gonna do right now, but you can use wp built in
+way of doing that by going to wp panel => settings => media.
+-----------------------------------------------------------------------------------------------------------------------------
+Single Post => to make single posts dynamic, first go to wp panel and add a new post (with => title, content, tag, excerpt, thumbnail), then go to front-page.php, copy
+everything and paste into the "single.php" file. now your post would technically display if you view in the browser.
+-----------------------------------------------------------------------------------------------------------------------------
+Template-Parts => now we wanna split our different post types and make a file for each type in the "template-parts" folder, this way you can fetch them anywhere
+in your theme without needing to copy-paste the entire code, and also if you wanna edit them, you only have to edit one file, let's start with the
+Article Post type, go into "single.php" and replace "the_content();" in your wp loop, with this code:
+
+get_template_part( 'template-parts/content', 'article' );
+
+this will fetch the "content-article.php" file in our "template-files" folder. now let's go to "template-files" folder and and make a php file called "content-article.php",
+now go to your original "post.html" file and copy the "date, tags, comments" container that also contains the classes and ids for our content, paste it in "content-article"
+file and we start making it dynamic, like this:
+
+<div class="container">
+	<header class="content-header">
+		<div class="meta mb-3">
+            <span class="date"><?php the_date(); ?></span>
+            <?php
+                the_tags( '<span class="tag"><i class="fa fa-tag"></i>', '</span><span class="tag"><i class="fa fa-tag"></i>', '</span>' );
+            ?>
+            <span class="comment"><a href="#comments"><i class='fa fa-comment'></i><?php comments_number(); ?></a></span>
+        </div>
+	</header>
+
+    <?php
+        the_content();
+    ?>
+
+    <?php
+        comments_template();
+    ?>
+
+</div>
+
+Date => we added "<?php the_date(); ?>" to display date, it also takes a bunch of optional parameters to modify how the date is displayed.
+Tags => we add "the_tags()" function which takes loops through the tags, and takes three parameters, 1st one is the html code that's gonna be
+printed in the very beginning, right before the first tag, 2nd is the html code that gets printed between the tags, 3rd is the code that's printed
+after the last tag at the end.
+Comments count => the "comments_number()" code will give us the number of comments people left on the post.
+Content => the "the_content();" code will just display the content of the post obv.
+Comments Template => this code "comments_template();" will load our "comments.php" file (which we will develop next).
+So now the "single.php" file is used for the "Article" post type, before moving on to the next post type, first let's develop our "comments.php" file.
+-----------------------------------------------------------------------------------------------------------------------------
+Comments => here we're gonna use the official wp comments functions. but more advanced users usually make their own custom comments.
+go to the file in your original template that contains the comments container, copy the whole container and paste in the "comments.php" file. now we replace
+the hardcoded parts with wp functions to make it dynamic, like this:
+
+<div class="comments-wrapper">
+
+
+<div class="comments" id="comments">
+
+
+	<div class="comments-header">
+
+		<h2 class="comment-reply-title">
+			<?php
+                if( ! have_comments() ) {
+                    echo "Leave a Comment";
+                }
+                else{
+                    echo get_comments_number() . "Comments";
+                }
+            ?>
+        </h2><!-- .comments-title -->
+
+	</div><!-- .comments-header -->
+
+	<div class="comments-inner">
+
+		<?php
+            wp_list_comments(
+                array(
+                    'avatar_size' => 120,
+                    'style' => 'div'
+                )
+            );
+        ?>
+
+	</div><!-- .comments-inner -->
+
+</div><!-- comments -->
+
+<hr class="" aria-hidden="true">
+					
+<?php
+    if( comments_open() ) {
+    comment_form(
+            array(
+                'class_form' => '',
+                'title_reply_before' => '<h2 id="reply-title" class="comment-reply-title">',
+                'title_reply_after' => '</h2>'
+            )
+        );
+    }
+?>
+
+</div>
+
+In the <h2> tag we use an "if" statement that prints "Leave a Reply" if no comments exist, and if comments exist, it gets the number of comments and prints it.
+Next, "wp_list_comments()" will iterate through the existing comments in the database of that post, and print them, one by one. (you can find a full list of its parameters
+in the official wp codex.
+The last function checks if the post's comments system is available, if yes, "comment_form()" will execute, and it will print the form that users use to leave
+comments. it has an array with lots of parameters that you can find in wp codex. for example, with "'title_reply_before'" and "'title_reply_after'" we can wrap
+the input text in html tags. that's it for comments !
+-----------------------------------------------------------------------------------------------------------------------------
+Posts Archive Page => now let's make the Archive page so we can display all of our posts,now the "archive.php" file in our theme directory cannot be used for the
+main "posts" archive, it can only be used for "custom posts, tags archive, category, archive, author archive etc.". so to be able to display our posts archive,
+we go to wp panel, and first me make a page called for example "Blog". then we go to settings => reading, and change the "posts page" drop down menu to "Blog".
+now before we continue let's also go to appearance => menus => view all, and add the "Blog" to our menu just so we can access it. so now, the file that wp uses
+for the "blog posts" which we just set to "Blog", is the "index.php" file. so let's go to "single.php", copy everything and paste it in "index.php".
+here we want to change the second parameter of the template_part code from "article" to "archive":
+
+ "get_template_part( 'template-parts/content', 'archive' );"
+ 
+before we continue, after we made this change, let's copy eveything in this "index.php" file and paste it in our "archive.php" file, because like we said
+"archive.php" is used to display "custom posts, tags archive, category, archive, author archive etc.". that's that. now let's get back to Posts archive.
+now we need to go to our "template-parts" folder and create a new file called "content-archive.php" so the above code can fetch it. now we open the
+"content-article.php" file, copy everything and paste into the "content-archive.php" file, it should look something like this:
+ 
+ <div class="container">
+	<header class="content-header">
+		<div class="meta mb-3">
+            <span class="date"><?php the_date(); ?></span>
+            <?php
+                the_tags( '<span class="tag"><i class="fa fa-tag"></i>', '</span><span class="tag"><i class="fa fa-tag"></i>', '</span>' );
+            ?>
+            <span class="comment"><a href="#comments"><i class='fa fa-comment'></i><?php comments_number(); ?></a></span>
+        </div>
+	</header>
+
+    <?php
+        the_content();
+    ?>
+
+    <?php
+        comments_template();
+    ?>
+
+</div>
+
+but here, we won't need most of the code, so we don't need "comments", and we also don't need "<header>(because we have diiferent tags and classes etc. that we're
+gonna copy from our original template's archive.html file)". so we delete those and we're left with this:
+
+<div class="container">
+
+    <?php
+        the_content();
+    ?>
+
+</div>
+
+now we go to our original "archive.html" file (or wherever you stored your posts archive code), and we find the container that contains the code for every post.
+and we replace all the hardcoded lines, with wp functions to make it dynamic, like this:
+
+<div class="container">
+
+<div class="post mb-5">
+	<div class="media">
+		<img class="mr-3 img-fluid post-thumb d-none d-md-flex" src="<?php the_post_thumbnail_url('thumbnail'); ?>" alt="image">
+		<div class="media-body">
+			<h3 class="title mb-1"><a href="<?php the_permalink(); ?>"><?php the_title(); ?></a></h3>
+			<div class="meta mb-1">
+                <span class="date"><?php the_date(); ?></span>
+                <span class="comment"><a href="#"><?php comments_number(); ?></a></span>
+            </div>
+		    <div class="intro">
+                <?php
+                    the_excerpt();
+                ?>
+            </div>
+		<a class="more-link" href="<?php the_permalink(); ?>">Read more &rarr;</a>
+	    </div><!--//media-body-->
+    </div><!--//media-->
+</div>
+
+</div>
+
+so in the "img" tag we're using "<?php the_post_thumbnail_url('thumbnail'); ?>" to get the address to the attached photo in every post, and the "'thumbnail'"
+parameter will give us the smallest image size that is defined in wp panel => setting => media.
+in the "<h3>" tag we're using "<?php the_permalink(); ?>" to get the link for the post, and "<?php the_title(); ?>" to get the title of the post.
+in the first "<span>" we're using "<?php the_date(); ?>" to get the date that the post was posted.
+in the second "<span>" we're using "<?php comments_number(); ?>" to display how many comments the post has.
+so because this is just the posts archive page, we dont't wanna display the whole post. so we chose to display just the excerpt, but you can display a section
+of the post content too. so in the main "<div>" container we used "<?php the_excerpt(); ?>" to display the excerpt of every post.
+then in the "<a>" tag (Read more link), we used "<?php the_permalink(); ?>" to get the link of every post, so we can click and visit the post.
+-----------------------------------------------------------------------------------------------------------------------------
+Pagination => this is very simple because we will use wp built in pagination function, so here we're just completing the last section (archive page) because this
+will be used at the bottom of our posts archive page, go to index.php and add the pagination code at the bottom of your container, like this:
+
+<?php
+	get_header();
+?>
+    
+		<article class="content px-3 py-5 p-md-5">
+	    
+			<?php
+
+				if( have_posts() ) {
+					
+					while( have_posts() ) {
+
+						the_post();
+						get_template_part( 'template-parts/content', 'archive' );
+
+					}
+
+				}
+
+			?>
+
+			<?php
+				the_posts_pagination();
+			?>
+
+	    </article>
+	    
+    
+<?php
+	get_footer();
+?>
+
+and that's it! wp will take care of the rest, of course you can add your CSS, and even make a custom pagination if you want.
+-----------------------------------------------------------------------------------------------------------------------------
+Pages => now we wanna make our pages dynamic ("contact page", "about us" etc.). so let's go to our "template-parts" folder and add a new file called "page".
+now open "content-article.php" file and copy everything and paste in the new "page.php" file, we won't need the "comments" and the "<header>" section, so
+we're gonna delete those, but your theme may be different. now we're left with this code:
+
+<div class="container">
+
+    <?php
+        the_content();
+    ?>
+
+</div>
+
+that's it for pages !
+-----------------------------------------------------------------------------------------------------------------------------
+Widgets => for our theme, we're gonna add 2 widget areas, to add widget areas, we go to "functions.php" and add the following code to the end of the page
+right before the "?>" closing tag, like this:
+
+function followandrew_widget_areas() {
+
+    register_sidebar(
+        array(
+            'before_title' => '',
+            'after_title' => '',
+            'before_widget' => '',
+            'after_widget' => '',
+            'name' => 'Sidebar Area',
+            'id' => 'sidebar-1',
+            'description' => 'Sidebar Widget Area'
+        )
+    );
+
+    register_sidebar(
+        array(
+            'before_title' => '',
+            'after_title' => '',
+            'before_widget' => '',
+            'after_widget' => '',
+            'name' => 'Footer Area',
+            'id' => 'footer-1',
+            'description' => 'Footer Widget Area'
+        )
+    );
+
+}
+
+add_action('widgets_init', 'followandrew_widget_areas');
+
+"register_sidebar()" => is used to register our widget area, it takes one array, here we're using 2 of this function, because we have two widget areas!
+"'before_title'" and "'after_title'" => are used to insert tags right before, and right after the title of the widget, so we can assign classes and ids.
+"'before_widget'" and "'after_widget'" => are used to wrap the whole widget area in tags, so we can assign the whole widget are classes and ids.
+"'name'" => is used to display a name in the wp appearance => widgets section.
+"'id'" => is used to load the widget in our theme, for example we can add it in our "header.php" file (which we will!).
+
+now we go to our "header.php" file where we have the code for our sidebar nav menu. it might be different for you, but we add the following code to our "<nav>"
+container:
+
+<?php
+	dynamic_sidebar('sidebar-1');
+?>
+
+this will load our widget area that we just defined in our "functions.php" file, and "'sidebar-1'" is the "id" that we gave to the sidebar one.
+now we go to "footer.php" and we add the following code in the appropriate place :
+
+<?php
+	dynamic_sidebar('footer-1');
+?>
+
+this is the same code, just the id is different. now finally we can go to widgets section in our wp panel and use the widget areas.
+-----------------------------------------------------------------------------------------------------------------------------
+404 Page Not Found ! => to make our 404 page let's go to "index.php" and copy everything and paste it in our "404.php" page, but we won't need the posts loop and
+the pagination, so we delete those and we're left with a "page not found" h1 tag, and under it, a wp function to display a search form, like this :
+
+<?php
+	get_header();
+?>
+    
+		<article class="content px-3 py-5 p-md-5">
+	    
+            <h1>Page Not Found</h2>
+
+            <?php
+                get_search_form();
+            ?>
+
+	    </article>
+	    
+    
+<?php
+	get_footer();
+?>
+
+so we're done for the "404.php" page, next let's build our Search file.
+-----------------------------------------------------------------------------------------------------------------------------
+Search.php => for the last part of this short tutorial, let's go to "archive.php" copy everything, and paste it into the "search.php" file, and we don't need
+to make any changes to the code! that's it. --Stay Hungry, And Stupid, or... something of that sort---
