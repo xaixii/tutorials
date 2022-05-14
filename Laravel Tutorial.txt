@@ -1,0 +1,1483 @@
+LARAVEL TUTORIAL
+in this thourough laravel tutorial we assume that you have a working template and want to convert it to laravel.
+
+-----------------------------------------------------------------------------------------------------------------------------
+Install=> first we need to install laravel. so first go to Composer website and download and install it. now you can type "composer" in shell or command
+line to see if it is working. now open shell and run "composer global require laravel/installer". you can type "laravel -v" to check if it's installed.
+now inside shell, go to the directory that you wanna install laravel, and type "laravel new example" (example is your project name) to create a new project.
+now you can open the project folder in your code editor.
+-----------------------------------------------------------------------------------------------------------------------------
+Serve=> to run a server in terminal you can type "php artisan serve".
+-----------------------------------------------------------------------------------------------------------------------------
+Front End Files => go to directory containing your front and backend folders. copy the front folder and paste in in "public" folder inside laravel project.
+now copy your index.html file and go to "resources/views" directory, make a folder called "front" (you can choose any name you want) and paste it inside the
+folder, and change it's name to "index.blade.php" (because that's the extension laravel uses). now go to routes and open "web.php". comment out the route
+inside the file and add this instead:
+
+Route::get('/', function () {
+    return view('front.index');
+});
+
+this way main page of the site will load our index file.
+-----------------------------------------------------------------------------------------------------------------------------
+SRC addresses in index => no we change all the addresses inside "index.blade.php" and make it relative to the laravel structure. you can skip this for the files
+that are gonna be dynamic like pictures. if this is a script tag : <script src="js/main.js"> you can replace the address with "{{asset('/front/js/main.js')}}".
+and this is the final result : <script src="{{asset('/front/js/main.js')}}">. the directory of the laravel starts in the public folder. and obv we copied our
+front folder inside the public folder. hence the path !
+-----------------------------------------------------------------------------------------------------------------------------
+Partials=> now we wanna split different parts of our theme. go to "respurces->views->front" and makes two folders called "layouts" and "partials". open the layouts
+folder and make a file called "master.blade.php". now copy lines inside "index.blade" and paste it inside this master file. now delete everything inside the body
+tag except the script tags. so you'll have your opening html, head, empty body tag (just the script tags) and the closing html.
+
+now inside the body tag write this : @yield('content') -> this way we can add different pages here after we use "@extends" in other files.
+
+no go to index.blade file delete everything but the main main content (everything that is missing from the master file). basically your final code should 
+look something like this :
+
+
+@extends('front.layouts.master')
+
+@section('content')
+
+	//here you should have your main html content//
+
+@endsection
+
+
+later we can make different files for the head and script tags too. for now we'll leave it as is.
+-----------------------------------------------------------------------------------------------------------------------------
+More Partials => now we want to split different sections of our main content in into different files and store them inside the partials folder. to include any of this files inside
+a page (for example the index page) you can use this code : @include(''). so go to the partials folder and for every section of your index page make a file.
+(remember to use the "blade.php" extention for your files) now you can delete the main content in the index file and replace it with all the include tags.
+you should now have something like this :
+
+@extends('front.layouts.master')
+
+@section('content')
+
+
+    @include('front.partials.top-header')
+
+    @include('front.partials.header')
+
+    @include('front.partials.hero-wrap')
+
+    @include('front.partials.about')
+
+    @include('front.partials.intro')
+
+    @include('front.partials.slider')
+    
+    @include('front.partials.blogs')
+
+    @include('front.partials.contact')
+
+    @include('front.partials.footer')
+
+
+@endsection
+
+
+-----------------------------------------------------------------------------------------------------------------------------
+Breeze=> in this tutorial we will use breeze compiler. it offers tailwind css. this compiler will add authentication, register, login etc. capabalities.
+ to install go to terminal and do these steps:
+
+1. "composer require laravel/breeze --dev"
+2. "php artisan breeze:install"
+3. "npm install"
+4. "npm run dev"
+
+now go to "routes" folder and open "web.php" file. you'll see that compiler has changed our "front.index" to "welcome". just go ahead and change that back to
+"front.index" to use our index file for the front page. and you'll also see another route line which is for the dashboard page for registration, login etc.
+we can use names for every laravel function to call it easily in other files. so let's add the name (front.index) to our main page route like this:
+
+Route::get('/', function () {
+    return view('front.index');
+})->name('front.index');
+
+-----------------------------------------------------------------------------------------------------------------------------
+Registeration page => compiler adds a bunch of pages for registration etc. if you go to "routes" folder and open "auth.php" these are all the pages that compiler
+made for us for registration, authentication etc. now hold "ctl" and hover your mouse over "RegisteredUserController" in the register section and you you should see
+the path for the register file that it is including. go to that path and open the file. in the file there is a function that has this address : 'auth.register'.
+this refers to this directory : "resources/views/auth/register.blade.php". so no go there and open the file. this is the registration file that the compiler made
+for us. Now in this tutorial we wanna use our own register page so we delete everything inside this page. now go to your front html files and open the "register.html"
+file, copy everything and paste it into this "register.blade.php" file. now we wanna extend the "master.blade.php" file and make this page dynamic just like we
+did with our index page. so we delete everything in this file except the registration html tags. your final page should look something like this :
+
+@extends('front.layouts.master')
+
+@section('content')
+
+
+    <!-- your registration tags -->
+	
+
+@endsection
+
+
+but this doesn't include our header and footer. so now just like in our index.php file, we need to include our header and footer files from the "partials" folder.
+so our final code should look something like this :
+
+@extends('front.layouts.master')
+
+@section('content')
+
+@include('front.partials.header')
+
+
+    <!-- your registration tags -->
+	
+@include('front.partials.footer')
+
+@endsection
+
+-----------------------------------------------------------------------------------------------------------------------------
+Post Register => now we need to define a POST page that our register form can post it's content to. so go to the "routes" folder and open auth.php file and find
+the register route that has "post" before the parantheses. to be able to call this route in our form we give it a name. so now we have :
+
+    Route::post('register', [RegisteredUserController::class, 'store'])
+                ->name('register.store');
+				
+we gave it the name "register.store". and now we can use it in our form's "action" attribute. so go back to "register.blade.php" and add thr route. your opening form
+tag should now look like this : <form action="{{route('register.store')}}" method="POST">. we'll use html forms for now. later we will switch to "laravel collective".
+-----------------------------------------------------------------------------------------------------------------------------
+Form Submit => now make sure that inputs in you form have "types" set correctly and "name" attributes should be set according to the names your compiler uses,
+so it should looke something like this :
+
+
+<div class="auth py-5">
+        <div class="container py-5">
+            <div class="row justify-content-center">
+                <div class="col-md-6">
+                    <h3 class="text-center mb-5">Register</h3>
+                    <form action="{{route('register.store')}}" method="POST">
+                        @csrf
+                        <input type="text" name="name" class="form-control mt-3" placeholder="Full Name">
+                        <input type="text" name="mobile" class="form-control mt-3" placeholder="Number">
+                        <input type="email" name="email" class="form-control mt-3" placeholder="Email">
+                        <input type="password" name="password" class="form-control mt-3" placeholder="Password">
+                        <input type="password" name="password_confirmation" class="form-control mt-3" placeholder="Confirm Password">
+                        <button type="submit" class="btn btn-primary mt-3 w-100 text-dark border-0">Register</button>
+                        <a href="" class="btn btn-success w-100 mt-3 border-0">Login</a>
+                    </form>
+                </div>
+            </div>
+        </div>
+</div>
+	
+to see where this form gets processed after submit, go to "routes" folder, open "auth.php" and find "register" route that has an object of "store". hold ctrl and
+hover over the function and again you'll see the directory that the function is sending the request to. go to the directory and open the "RegisteredUserController"
+file. in the file, in the "store" function there are "validate" and "create" arrays. but we have a "mobile" input which in "breeze" compiler isn't defined by
+default. so in the register store function we can define any additional items that we wanna use. we will modify this function more later.
+now let's add a laravel function below or above our form in the register.blade.php file so we can handle errors like "password is required". so below or above
+youe form tag, add this:
+
+                    @foreach($errors->all() as $error)
+
+                        <p>{{$error}}</p>
+
+                    @endforeach
+					
+this is basically a laravel "foreach" function that will go through every input and print their errors.
+-----------------------------------------------------------------------------------------------------------------------------
+DataBase, XAMPP => in this tutorial for database, we'll use xampp. so install and run xampp, and start mysql and apache. now go to phpmyadmin page and create a
+new database, with it's name matching the name of your laravel project. because if you go to your ".env" file you'll see that your database name is the same as
+your laravel project name. now we go to "database/migrations" and open the "create users table" file. here you'll see all the tables that our compiler created
+for us for registration. now we wann add our own "mobile" table to this list, we can also add "unique()" so only one user with every phone number can be registered.
+so now we have something like this:
+
+Schema::create('users', function (Blueprint $table) {
+            $table->id();
+            $table->string('name');
+            $table->string('mobile')->unique();
+            $table->string('email')->unique();
+            $table->timestamp('email_verified_at')->nullable();
+            $table->string('password');
+            $table->rememberToken();
+            $table->string('role')->default('user');
+            $table->timestamps();
+        });
+		
+now to be able to send the the new rows that we add, (mobile) we need to add them in two more places. first open "RegisteredUserController" and in "$user = User::create"
+add another row for item for your custom input, then go to "app/models" open "user.php" and in "protected $fillable" add your new item(s). more on this later.
+but now go ahead and fill a registration from and go to your phpmyadmin and check if everything is working.
+-----------------------------------------------------------------------------------------------------------------------------
+Admin Links => you should already have a container in your header for going into admin (for logged in users) and for registering and logging in (for guests). so go to
+"resources/views/front/partials" and open your "header.blade.php" file. now we can use the "@guest" laravel functions to differentiate between users. so you can
+do something like this:
+
+<div class="auth-user">
+
+    @guest
+
+        <div class="auth-users">
+            <a href="">Register</a>
+            /
+            <a href="">Sign In</a>
+        </div>
+    @else
+        <div class="profile">
+            <div class="prof">
+                <a href="">Profile</a>
+            </div>
+            <div class="logout">
+                <div>Exit</div>
+            </div>
+        </div>
+
+    @endguest
+
+
+
+    <div class="auth-user-icon">
+        <i class="fas fa-cog fa-spin"></i>
+    </div>
+</div>
+
+
+here everything after the "@guest" will run for guests, and everything after "else" will run for logged in users. and "@endguest" closes the functon.
+now you can give links to the dashboard and register links using route. then we make a "form" right after the "logout" link and pass the logout route to it's
+action, method should be "post", give it and id so we can call it, and make sure inside the form use "@csrf" so the form gets posted securely. now make an
+"onclick" attribute in the logout tag and pass it a JS function. go to "public/front/js" and open your main js file. add a function which grabs the id of
+the logout form we just created and sbmits it. the js function should look like :
+
+function logoutUser() {
+    document.querySelector('#logout').submit();
+}
+
+and our panel links should like something like this(we will add the login a in a minute):
+
+
+<div class="auth-user">
+
+    @guest
+
+        <div class="auth-users">
+            <a href="{{route('register')}}">Register</a>
+            /
+            <a href="">Login</a>
+        </div>
+    @else
+        <div class="profile">
+            <div class="prof mb-3">
+                <a href="{{route('dashboard')}}" target="_blank">Profile</a>
+            </div>
+            <div class="logout" style="cursor: pointer">
+                <div onclick="logoutUser()">Exit</div>
+            </div>
+        </div>
+
+        <form action="{{route('logout')}}" method="post" id="logout">
+            @csrf
+        </form>
+
+    @endguest
+
+
+
+    <div class="auth-user-icon">
+        <i class="fas fa-cog fa-spin"></i>
+    </div>
+</div>
+
+-----------------------------------------------------------------------------------------------------------------------------
+Login=> now we can add the login link, so we should have some think like : "<a href="{{route('login')}}">Login</a>".
+but now we also want to make a new page for our login. because we already made the register page, we go to "resources/views/auth" and open the register.blade page,
+copy everything and paste it in the login.blade file in the same folder. now go to "public/front", open your login.html file and copy the login container. go back
+to the "login.blade.php", delete the register container and paste the login div there.
+now before anything go to routes folder and open "auth.php" and give the "login store" a name so we can all it. like this:
+
+    Route::post('login', [AuthenticatedSessionController::class, 'store'])
+                ->name('login.store');
+				
+now in your login form give the routes and everything just like we did for the register page, final product :
+
+
+<div class="auth py-5">
+        <div class="container py-5">
+            <div class="row justify-content-center">
+                <div class="col-md-6">
+
+                    <h3 class="text-center mb-5">Login</h3>
+                    <form action="{{ route('login.store') }}" method="post">
+                        @csrf
+                        <input type="text" name="email" class="form-control mt-3" placeholder="Email">
+                        <input type="password" name="password" class="form-control mt-3" placeholder="Password">
+                        <button type="submit" class="btn btn-primary mt-3 w-100 text-dark border-0">Login</button>
+                        <a href="{{ route('register') }}" class="btn btn-success w-100 mt-3 border-0">Registration Page</a>
+                    </form>
+                </div>
+            </div>
+        </div>
+ </div>
+ 
+-----------------------------------------------------------------------------------------------------------------------------
+Remember Me and Login With Email AND Phone => now open your login page that you just created. below the password input, we can add this checkbox:
+
+<label for="" class="mt-3">
+    <input type="checkbox" name="remember">
+    Remember Me
+</label>
+
+since we gave this input the name "remember" the breeze compiler will take care of the rest. to check if it's working you can login and then check your mysql.
+
+now to add the ability to login with both phone and email, go to "app/http/requests/auth" and open the "LoginRequest.php" file. in the "authenticate()" function
+you should see this line:
+
+if (! Auth::attempt($this->only('email', 'password'), $this->boolean('remember'))) {
+            RateLimiter::hit($this->throttleKey());
+			
+right above it, we wanna add a function to check if our email field is an email, if it is, we give it a value of 'email', if not we call it 'mobile'. then we wanna
+remove the "$this->only" in the "if" statement and we wanna create an array so we can login with both email and phone. like this:
+
+$inputType = filter_var($this->email, FILTER_VALIDATE_EMAIL) ? 'email' : 'mobile';
+
+    if (! Auth::attempt([
+        $inputType => $this->email,
+        'password' => $this->password
+	], $this->boolean('remember'))) {
+    RateLimiter::hit($this->throttleKey());
+	
+now in this same file "LoginRequest.php" in the "rules()" function, in the "email" item you need to remove the "email" value(condition). otherwise we will still 
+only be able to login only with email.
+-----------------------------------------------------------------------------------------------------------------------------
+Form Errors=> to deal with form errors when signing up or login in laravel, we can use "@error". we put it under every input (except "password_confirmation"
+which laravel ouputs it's error in place of the "password" input) and pass it the tag's name, like this :
+
+<form action="{{route('register.store')}}" method="POST">
+    @csrf
+    <input type="text" name="name" class="form-control mt-3" placeholder="Full Name">
+    @error('name')
+        <p class="text-danger my-2">{{$message}}</p>
+    @enderror
+    <input type="text" name="mobile" class="form-control mt-3" placeholder="Phone">
+    @error('mobile')
+        <p class="text-danger my-2">{{$message}}</p>
+    @enderror
+    <input type="email" name="email" class="form-control mt-3" placeholder="Email">
+    @error('email')
+        <p class="text-danger my-2">{{$message}}</p>
+    @enderror
+    <input type="password" name="password" class="form-control mt-3" placeholder="Password" />
+    @error('password')
+        <p class="text-danger my-2">{{$message}}</p>
+    @enderror
+	<input type="password" name="password_confirmation" class="form-control mt-3" placeholder="Confirm Password" />
+    <button type="submit" class="btn btn-primary mt-3 w-100 text-dark border-0">Register</button>
+     <a href="" class="btn btn-success w-100 mt-3 border-0">Login Page</a>
+</form>
+
+
+one thing worth mentioning is that by default after we register using the compiler we get redirected to the "dashboard". to understand how this happens go to
+"app/http/controllers/auth" and open "registeredUserController.php". at the bottom of the page you'll see this line :
+
+return redirect(RouteServiceProvider::HOME);
+
+and at the top of the page you can find the exact route for it which is "App\Providers\RouteServiceProvider" go there and open the file. find this line:
+
+public const HOME = '/dashboard';
+
+you can change the dashboard to any address you want, but we won't change it.
+now do the same for the login page. but remember to use "email" for "email or phone" input, since we're using the "email" name.
+-----------------------------------------------------------------------------------------------------------------------------
+Middleware => our compiler is using middlewares to control who can "take an action, visit a page" and who can not. if you go to "routes/auth.php" you can see
+a list of this regarding the authentication. to see a full list of all the middlewares go to "app/http" and
+open "kernel.php"
+-----------------------------------------------------------------------------------------------------------------------------
+Farsi/Making Errors Farsi => you can do this for any language. easiest way to do this is to use packages. go to "github.com/laravel-lang/lang" and download it as
+a zip file. in the "locals" folder copy the "fa" folder and paste it in the "resources/lang" folder. you can also open the files and change the errors if
+you want. now to tell laravel to use these errors, go to "config" folder and open "app.php", find the line "'Locale' => 'en'" and change it to "'Locale' => 'fa'".
+since we put the messages of the errors inside "p" tags we can go our style.css file and give it styles.
+
+-----------------------------------------------------------------------------------------------------------------------------
+CMS/Admin => now we move on to our cms. first go to "resources/views" and make a new folder just like the "front" folder, we can call this "admin". now we also
+copy the "back" folder of our theme which contains all the backend theme and files and paste it in the "public" folder in laravel. now open the "index.html"
+file of your "back", copy everything and go to "resources/views/admin" and make a new file inside this new admin folder called "index.blade.php".
+we described how to change the paths inside the index for the front end once, i copied the same explanation and changed the address to "back", do these again
+for the index file of the "back" too :
+
+SRC addresses in index => no we change all the addresses inside "index.blade.php" and make it relative to the laravel structure. you can skip this for the files
+that are gonna be dynamic like pictures. if this is a script tag : <script src="js/main.js"> you can replace the address with "{{asset('/back/js/main.js')}}".
+and this is the final result : <script src="{{asset('/back/js/main.js')}}">. the directory of the laravel starts in the public folder. and obv we copied our
+front folder inside the public folder. hence the path !
+
+but now if you go to "routes" and open the "web.php" file you'll see that the "/dashboard" url is opening the "dashboard" file in our "view" folder. so we
+change that to "admin.index" so it loads our own file. this is only for test purposes so you check if it's working by going to your dashboard url, we will change
+this in a bit.
+-----------------------------------------------------------------------------------------------------------------------------
+Partials for Backend => just like the front end we wanna split different parts of our dashboard. inside "resources/view/admin" for every section of our admin page
+that is gonna be static (sidebare, header, footer) we make a "*.blade.php" file, and in the index file we delete the corresponding sections and replace them
+with "@include". let's take a look at our final "index.blade.php" file:
+
+<!DOCTYPE html>
+<html lang="fs">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ asset('/back/css/bootstrap.css') }}">
+    <link rel="stylesheet" href="{{ asset('/back/css/style.css') }}">
+    <title>Document</title>
+</head>
+
+<body>
+
+    @include('admin.sidebar')
+
+    <div id="main">
+
+        @include('admin.head')
+
+        @include('admin.information')
+
+        <div class="main-content">
+            <div class="main-content-item">
+
+                @yield('content')
+
+            </div>
+        </div>
+
+    </div>
+
+
+    <script src="{{ asset('/back/js/jquery.js') }}"></script>
+    <script src="{{ asset('/back/js/fontawesome.js') }}"></script>
+    <script src="{{ asset('/back/js/main.js') }}"></script>
+
+
+</body>
+
+</html>
+
+
+this whole index file and all the sections it's including only serves as the template of our dashboard. when we extend this layout from any of our "urls/pages"
+of our dashboard the whole content of this layout will be sent to that file and the "@section('content') ... @endsection" will be placed in the "@yield('content')"
+and that page will come to life. that's why we can't use "admin.index" as the file that our dashboard url loads, because it's just the template. now in the same
+"admin" folder make another file for your dashboard main page called anything you want. here we called this "old.blade.php" :
+
+@extends('admin.index')
+
+@section('content')
+
+    <div class="dynamic-content">
+        <h2>Latest Projects</h2>
+        <table>
+            <tbody>
+                <tr>
+                    <th>Supervisor</th>
+                    <th>Project</th>
+                    <th>Country</th>
+                </tr>
+                <tr>
+                    <td>Apple</td>
+                    <td>Semiconductors</td>
+                    <td>Belgium</td>
+                </tr>
+                <tr>
+                    <td>Google</td>
+                    <td>A.I.</td>
+                    <td>Canada</td>
+                </tr>
+                <tr>
+                    <td>Tesla</td>
+                    <td>FSD</td>
+                    <td>Romania</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+@endsection
+
+and this is gonna be our main dashboard page, we will slowly add more pages later. now open the "web.php" file in your "routes" folder and change the dashboard
+file to "admin.old".
+-----------------------------------------------------------------------------------------------------------------------------
+User's Name In Dashboard => we have a section in our dashboard that say "Hi --username-- welocome, you are --role--" and want to make it dynamic. for the user's
+name we can simply replace it with : "{{auth()->user()->name}}" this will get the authenticated user and then get it's name. we can do the same thing for role,
+like this: "{{auth()->user()->role}}"
+-----------------------------------------------------------------------------------------------------------------------------
+Role Farsi => what if we want to translate the role in a different language and then display it? to do this let's go to "app/models/user.php" inside the "user"
+class at the very bottom, we add this funvtion which translates all three roles that we defined for our user, like this:
+
+public function RoleFarsi()
+    {
+        if ($this->role === 'user') return 'کاربر عادی';
+        if ($this->role === 'author') return 'نویسنده';
+        if ($this->role === 'admin') return 'مدیر سایت';
+    }
+
+now to display this in dashboard we open our "head.blade.php" back up (which contains our welcome text) and replace the "role" with our new function, like:
+{{auth()->user()->RoleFarsi()}}
+-----------------------------------------------------------------------------------------------------------------------------
+Users Page => now let's make our first page (different than the main index) in dashboard. to make a page in laravel we first need to create a "controller" for the
+page. this controller file will help us not only display the page, but update, edit, create, destroy etc. to do this open your terminal inside the laravel
+directory and run this command: "php artisan make:controller Adminstrator/UserController --resource" this will make "adminstrator" folder inside "app/http/controllers/"
+and inside the folder it will create a controller file called "UserController". the "--resource" line at the end of the command will create all the functions we
+need inside the controller file. now we want to pass the page file to load in our "users" url inside the "index" function in this controller. but first let's
+go to "resources/views/admin" and make a folder called "users" and inside the folder make an "index.blade.php" file and write a test text in it. now open the controller
+back up and in the index function write this: "return view('admin.users.index'));". remember the "view" will put us inside "resources/views".
+now we need to create a route to run this controller when someone visits "dashboard/users" url. and for that obv we go to "routes/web.php" and first we need to "use" our
+new users controller at the top of the page to load it. so at the top we write:
+
+"use App\Http\Controllers\Adminstrator\UserController;" (remember i'm using double quotes in this tutorial just to differentiate code from regular text)
+
+next, right below our last "route" we add a new route like this :
+
+"Route::get('/dashboard/users', [UserController::class, 'index']);"
+
+now go to "dashboard/users" url and check if the dummy text is showing.
+all of our "pages" of the backend cms will be similiar. remember our main layout is in "resources/views/admin/index.blade.php" which can be extended in our pages.
+so first we made the "old.blade.php" which is our main dashboard page. and inside it we extended the index layout. and made a "@section" which replaces the "@yield"
+section the is in the extended layout, and our page is made.
+so now the fastet way to make a new page is to open the "old.blade.php", copy everything and paste it in our new users page at "resources/views/admin/users/index".
+now we just need to change the content section with the content we wanna put in the users page.
+-----------------------------------------------------------------------------------------------------------------------------
+Getting Users From DataBase => we can access the users in our database from "app/models/user.php".but to display them in our "users" page we need to go to
+"App\Http\Controllers\Adminstrator\UserController.php" and first at the top import/use our user model like this : "use App\Models\User;", next we need to
+modify our index function in this page, we should have something like this(for now) :
+
+    public function index()
+    {
+        $users = User::all();
+        return view('admin.users.index', compact('users'));
+    }
+
+this will get all the users from our User model file and store it in the "$user" variable. then we passed this variable to the "view" that is opened when we visit
+our "users" url so our users data will be passed to that index page so we can use it there.
+now in the users "table" in ours "users" page we have two "<tr>" tags, the first contains the "<th>" tags which are static, the second contains the "<td>" tags which
+we wanna make dynamic. but we obv need to create a "<tr>" with every user. so we cut the second "<tr>" tag and its "<td>" tags, and put them inside a "@foreach"
+blade statement to loop through all the users that were passed to this url, like this (this is only the second <tr> ) :
+
+@foreach($users as $user)
+
+    <tr>
+        <td>{{$user->name}}</td>
+        <td>{{$user->email}}</td>
+        <td>{{$user->mobile}}</td>
+        <td>{{$user->role}}</td>
+        <td>{{$user->created_at}}</td>
+        <td><a href="" class="text-white text-decoration-none"><i class="fas fa-edit"></i></a></td>
+        <td><a href="" class="text-danger text-decoration-none">Delete</a></td>
+    </tr>
+
+@endforeach
+
+-----------------------------------------------------------------------------------------------------------------------------
+Pagination => now we need to add pagination to the users table. for this we first go to "App\Http\Controllers\Adminstrator\UserController.php" and modify our index
+function again and add the "$users" variable a "paginate()" function, like this :
+
+public function index()
+{
+    $users = User::paginate(4);
+    return view('admin.users.index', compact('users'));
+}
+	
+now we need to go to our "resources/views/admin/users/index.php" file and after the "</table>" tag we add this line to handle the pagination for us :
+"{{$users->links()}}"
+however if you visit "users" page you'll see that the style is bad, since our compiler is using "tailwind" css and we're using "bootstrap", we have two options,
+1.mess with the tailwind css file, 2.tell laravel to use "bootstrap" for the pagination links.
+we'll go with the second option in this tutorial. so go to "app/providers/appserviceprovider.php" and first, add this "use" at the top :
+"use Illuminate\Pagination\Paginator;"
+second, inside "boot" function we tell it to use bootstrap for pagination, like this :
+
+public function boot()
+{
+    Paginator::useBootstrap();
+}
+	
+this way laravel won't use "tailwind" for the style of the pagination links and instead use our bootstrap file inside our public folder. no you can change the style
+further, in your back css file if needed. (you can find its classes using the browser inspect tool)
+-----------------------------------------------------------------------------------------------------------------------------
+Accessing All User Functions => untill now we just accessed the "index" function in our "usercontroller" page, but we need more functions, let's look at our route:
+
+"Route::get('/dashboard/users', [UserController::class, 'index']);"
+
+this route is using "get" and it has "index" so it will only get the index function. to get all the functions we change this to :
+
+"Route::resource('/dashboard/users', UserController::class);"
+
+"resource" will get all the functions, and we also deleted the "index" since we're now getting all the functions. no if you open your terminal in laravel folder
+and run "php artisan route:list" you will see all the routes, and in the "users" section you'll see that a bunch of new routes for every function is added and
+each one has a name for us to call and use, like "users.store".
+-----------------------------------------------------------------------------------------------------------------------------
+Editing A User => first in your terminal run this again "php artisan route:list". you'll see that infront of every user function there's a "{user}". this stand for every
+single user. to change this in the terminal (just for educational purposes) we can add this parameter to our "route" in "routes/web.php" :
+Route::resource('/dashboard/users', UserController::class)->parameters(['users' => 'id']);
+this won't change anything, but if you run "php artisan route:list" again this time "user" is changed to id. this was just for education.
+
+now to create an Edit page first we give the edit links for the "users" in "resources/views/admin/users/index.blade.php" proper links. so now we have this edit link :
+
+<td><a href="{{route('users.edit', $user->id)}}" class="text-white text-decoration-none"><i class="fas fa-edit"></i></a></td>
+
+this will pass the user "id" to the link that the "users.edit" function creates for us, as you saw in the "php artisan route:list" the url structure for edit page
+looks like this: "dashboard/users/{id}/edit" so the link "{{route('users.edit', $user->id)}}" will create that url and pass the user id in the place of the "{id}".
+now we wanna first create a page at "resources/views/admin" called "edit.blade.php", put a test text in it. now open "usercontroller.php" file and in "edit"
+function add this: "return view('admin.users.edit');". now click on edit link of your users and check if it's working.
+-----------------------------------------------------------------------------------------------------------------------------
+Edit Page => inside the edit page we can copy the contents of the users page "index.blade.php", keep the container, but delete the table. now we create a form, so we can
+edit all the fields about a user(we will see the final product in a sec). but we don't want the fields to be empty, we want them to show the information about the user,
+so we want the "users.edit" function to return the single user that we clicked on based on their id. open "usercontroller.php" and modify your edit function like:
+
+    public function edit($id)
+    {
+        $users = User::findOrFail($id);
+        return view('admin.users.edit', compact('users'));
+    }
+	
+findOrFail -> this will check if the user id exists and if it does it will pass the id to the "User" model which will then get all the information about that user,
+if not, it will redirect the page to a "404" not found page. wheras if we used the "find" function it would return "null" if the id didn't exist.
+and as we already know the $id of the user is getting passed by the link, so we use it here. to add the contents to the inputs inside of our edit page we use
+"value" attribute, like this: "value="{{ $users->email }}"", and for the "roles" we use a "select" tag with three options here, "admin","author",and "user".
+to select one by default based on the user's role, we use blade "@if" statement inside every "option" tag, like this:
+"@if($users->role === 'user') selected @endif" to show the user's current role before edit.
+now before we complete our form let's go to "usercontroller.php" file and define our "update" function. first at the top add this :
+"use Illuminate\Validation\Rule;", now in the update function add these:
+
+public function update(Request $request, $id)
+    {
+        $user = User::findOrFail($id);
+        $request->validate([
+            'name'=>'required|string|max:255',
+            'email'=>['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
+            'mobile'=>['required', 'string', 'max:255', Rule::unique('users')->ignore($user->id)],
+            'role'=>'required|max:255'
+        ]);
+
+        $user->update([
+            'name'=>$request->name,
+            'email'=>$request->email,
+            'mobile'=>$request->mobile,
+            'role'=>$request->role,
+        ]);
+
+        return redirect()->route('users.index');
+
+    }
+	
+here we are validating the data sent from the "update" from, and checking if it passes all of our desired requirements, next we are updating our user database using
+our "User" Model variable "$users", and finally we redirect the user back to the "users.index" page.
+
+"Rule::unique('users')->ignore($user->id)]" -> this checks to see if the input already exists in the database,(because we want email and mobile to be unique)
+it will will throw an error if the input already exists, but since we are updating here, and not creatin a brand new user, maybe we wanna leave the input as is,
+and not change it, normally this would throw an error because the input aleady exists and we are validating it to be unique, but here "->ignore($user->id)" will make
+an exception for the user that we are editing, so we can submit the changes with inputs that already exist without an error.
+
+now back to our form, under every input we wanna add "@error" just like we did for the "register" and "login" pages. then we need to pass the update route to the
+"action" of the form along with the id of the user that we still have access to in the edit page, we also add the "post" method, but to update the users in
+laravel we need to use "put" method(which we cannot use in the form tag). so we add a blade function "@method" under the opening form tag. like this :
+
+<form action="{{ route('users.update', $users->id) }}" method="post">
+    @csrf
+    @method('put')
+	
+and remember we use "@csrf" to submit the form in a secure manner in laravel. now try to edit a user and submit, everything should change except the "role", that's
+because we need to add "role" to a file, go to "app/models/user.php" and in "$fillable" array add another item called "role", like this :
+
+protected $fillable = [
+        'name',
+        'mobile',
+        'email',
+        'password',
+        'role',
+    ];
+	
+if you already had this done, good for you!! anyway, now let's take a look at our final form in "edit.blade.php" page :
+
+@extends('admin.index')
+
+@section('content')
+    <div class="dynamic-content">
+        <h2>Edit User</h2>
+
+        <form action="{{ route('users.update', $users->id) }}" method="post">
+            @csrf
+            @method('put')
+            <div class="form-group">
+                <label for="username">Full Name</label>
+                <input type="text" name="name" id="username" value="{{ $users->name }}" placeholder="Full Name">
+                @error('name')
+                    <p class="text-danger my-2">{{ $message }}</p>
+                @enderror
+            </div>
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="text" name="email" id="email" value="{{ $users->email }}" placeholder="Email">
+                @error('email')
+                    <p class="text-danger my-2">{{ $message }}</p>
+                @enderror
+            </div>
+            <div class="form-group">
+                <label for="mobile">Phone</label>
+                <input type="text" name="mobile" id="mobile" value="{{ $users->mobile }}" placeholder="Phone">
+                @error('mobile')
+                    <p class="text-danger my-2">{{ $message }}</p>
+                @enderror
+            </div>
+            <div class="form-group">
+                <label>Role</label>
+                <select name="role">
+                    <option value="user" @if($users->role === 'user') selected @endif>User</option>
+                    <option value="author" @if($users->role === 'author') selected @endif>Author</option>
+                    <option value="admin" @if($users->role === 'admin') selected @endif>Admin</option>
+                </select>
+                @error('role')
+                    <p class="text-danger my-2">{{ $message }}</p>
+                @enderror
+            </div>
+            <div class="form-group">
+                <input type="submit" value="Save" class="btn-admin">
+            </div>
+        </form>
+
+    </div>
+@endsection
+
+-----------------------------------------------------------------------------------------------------------------------------
+Role-Farsi => now let's go back to our users page "resources/views/admin/users/index.blade.php", here we wanna again change the language fo the "role" that's
+displayed in the table. we made a function fo this before at "app/models/user.php", called "RoleFarsi()", because in this "user.php" file we have access to the users
+in our database, we can modify them as they are being called to our page. so in our index file we just replace "{{$user->role}}" with "{{$user->RoleFarsi()}}"
+and we're done.
+-----------------------------------------------------------------------------------------------------------------------------
+Date-Farsi => now we wanna change the language of our "created_at" date for the users. for this we're gonna use another package called "verta", you can find it
+with google search, but you can install it in terminal with this command: "composer require hekmatinasser/verta", after you run it, you should see multiple lines,
+saying "discovered package: ..." and one of those should have "hekmatinasser/verta" in it, if not you can find verta's documentation on it's github page and apply it
+manually. but now we need to go back to "app/models/user.php" and create a new function to convert the dates that are being fetched, so below "RoleFArsi()" add this:
+
+    public function Jalali()
+    {
+        return verta($this->created_at)->format('Y/m/d');
+    }
+	
+remember, we're able to use "verta" here only because we installed the package in terminal. now we need to use this function in our users page, so open back
+"resources/views/admin/users/index.blade.php" page and replace "{{$user->created_at}}" with "{{$user->Jalali()}}". now test your page.
+-----------------------------------------------------------------------------------------------------------------------------
+Sweet Alert => now for the alerts after the user performs an action we use the "sweetalert2" package. you can download it any way you want, but we copied the address,
+and opened it in our browser, saved the page in "public/back/js/" folder and called it "sweetalert2.js" and then loaded it in our backend layout in
+"resources/views/admin/index.blade.php" file like this: "<script src="{{ asset('/back/js/sweetalert2.js') }}"></script>" remember: "asset" lands us in the
+public folder of the laravel. now first we add this "@yield('js')" after our last js script that we just added, this way we keep our cody tidy wherever we create
+a "@section('js')" we'll know that our "<script>" tag is being run alongside the other script tags in the index layout. now let's go to our users file at
+"resources/views/admin/users/index.blade.php" and test it out. after the section add another section called "@section('id')" like this:
+
+@section('js')
+
+    @if(Session::has('update'))
+    <script>
+        Swal.fire({
+            icon: "success",
+            title: 'Congrats',
+            text: 'Edited Successfully',
+            confirmButtonText: "OK",
+        })
+    </script>
+    @endif
+
+@endsection
+
+ @if(Session::has('update')) -> let's add a session at "App\Http\Controllers\Adminstrator\UserController.php", inside the update function right after and below the
+ "$user->update" array, add this: "$request->session()->flash('update');" this will add an object called "update" in the "session()" function if the update is
+successful, and then we can use it in our "@if(Session::has('update'))" to run the alert only if the update was successful.
+-----------------------------------------------------------------------------------------------------------------------------
+Deleting A User => now we add a delete button in "index" page of the "users" for every user. let's go to "views/admin/users/index.blade.php" and find the static "delete"
+<td> tag, and replace it with this :
+
+<td>
+    @if(auth()->user()->id !== $user->id && $user->role !== 'admin')
+        <a href="" class="text-decoration-none text-danger" onclick="destroyUser(event, {{ $user->id }})">حذف</a>
+    @endif
+
+    <form action="{{ route('users.destroy', $user->id) }}" method="post"
+    id="delete-user-{{ $user->id }}">
+        @csrf
+        @method('delete')
+    </form>
+</td>
+
+we don't want the user to be able to delete themselves or and admin. so here we're checking if the authenticated user's id "isn't" the same as the user we're trying
+to delete "AND" the user we're trying to delete isn't an admin, if these conditions are true, then we display the Delete link. then in the "<a>" tag
+(delete link, which you can also add your desired CSS styling to it since we just made it), we add an "onclick" attribute to  run our JS function when clicked.
+we call the function "destroyUser" and pass two values "event" and the user's "id".
+in the form tag, we need to find a way so that when delete link is clicked we submit the form, for this, give the form this id: id="delete-user-{{ $user->id }}",
+and dynamically add the actuall "id" part at the end, in our JS function, we also give the form an action of: action="{{ route('users.destroy', $user->id) }}",
+to run the "users.destroy" function in our controller(which we'll set up in a bit), we give it "post" method because Laravel only accepts "post" and "get" inside
+the form tag's attributes, but then we change it to "@method('delete')" inside the form tag, and we also add the "@csrf". now let's add our function at the bottom of
+this "index" page inside the "@section('js')", so add this under our previous sweetalert function:
+
+    <script>
+        function destroyUser(event, id) {
+            event.preventDefault();
+            Swal.fire({
+            title: 'Are you sure?',
+            text: "Think carefully!",
+            icon: 'warning',
+            showCancelButton: true,
+            cancelButtonText: 'Abort',
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'I'm pretty sure!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                document.querySelector('#delete-user-' + id).submit();
+                Swal.fire(
+                    'Congrats!',
+                    'Deleted!',
+                    'You succeeded!'
+                ) 
+            }
+        })
+        }
+    </script>
+	
+in this function we first run "event.preventDefault();" to prevent the page from refreshing.
+then "then"(!) will check if user confirmed, and select the form tag that has the id of "delete-user-' + id" so we only select the user that has that id, and avoid
+deleting other users, then "submit()" which submit the form to "users.destroy" and send the "id" alongside it. now for all of this to work we have to modify the
+destroy function in our usercontroller. so let's go to "app/http/controllers/adminstrator/usercontroller.php" and add this to the destroy function:
+
+// public function destroy($id)
+// {
+		$user = User::findOrFAil($id);
+        $user->destroy($id);
+        return redirect()->route('users.index');
+// }
+
+*make sure you are "using" the "user" model at the top like this: "use App\Models\User;"*
+so here we're selecting the user that has the "id" that we sent in our "index" page using the delete link, then we delete it by using "destroy" function and
+passing the id, like "destroy($id)", then we redirect the user back to the same users "index" page.
+-----------------------------------------------------------------------------------------------------------------------------
+Users Page Access => if you log out of the admin and type in the url for dashboard page "site-url/dashboard" you won't be able to access because we added a 
+"middleware" in our "web.php" file for the dashboard. but if you type "site-url/dashboard/users" you will be able to access because we haven't added a middleware
+(you probably will run into an error though, because of the auth() function that we used in the users page which require to be logged in to execute), now let's
+go to "routes/web.php" and add middleware to the "users" route so that only authenticated visitors have access, so now we should have this:
+
+Route::middleware(['auth'])->resource('/dashboard/users', UserController::class)->parameters(['users' => 'id']);
+-----------------------------------------------------------------------------------------------------------------------------
+Dashboard Sidebar Access => we have three user "roles": admin,user, and author. in our dashboard isdebar we wanna let the admin have access to every link, the
+author should have less access than the admin, and the basic user should have access to just a couple links. let's go to "views/admin/sidebar.blade.php", and
+we add blade "@if" statements to control access, like this:
+
+<div id="mySlidenav" class="slidenav">
+    <p class="logo"><span>T</span>opStuff</p>
+    <a href="#" class="icon-a"><span class="icon"><i class="fas fa-eye"></i></span>View Website</a>
+    <a href="#" class="icon-a"><span class="icon"><i class="fas fa-home"></i></span>Dashboard</a>
+
+    @if(auth()->user()->role === 'admin')
+    <a href="#" class="icon-a"><span class="icon"><i class="fas fa-magic"></i></span>Website Seo</a>
+    <a href="#" class="icon-a"><span class="icon"><i class="fas fa-ellipsis-h"></i></span>Header Menu</a>
+    <a href="#" class="icon-a"><span class="icon"><i class="fas fa-laptop-house"></i></span>Home</a>
+    <a href="#" class="icon-a"><span class="icon"><i class="fas fa-address-card"></i></span>About Us</a>
+    <a href="#" class="icon-a"><span class="icon"><i class="fas fa-book-open"></i></span>Intro</a>
+    <a href="#" class="icon-a"><span class="icon"><i class="fas fa-cogs"></i></span>Services</a>
+    <a href="#" class="icon-a"><span class="icon"><i class="fas fa-user-friends"></i></span>Team</a>
+    <a href="#" class="icon-a"><span class="icon"><i class="fas fa-images"></i></span>Resume</a>
+    <a href="#" class="icon-a"><span class="icon"><i class="fas fa-comment-alt"></i></span>Customer Opinions</a>
+    <a href="#" class="icon-a"><span class="icon"><i class="fas fa-headset"></i></span>FAQ</a>
+    <a href="#" class="icon-a"><span class="icon"><i class="fas fa-clipboard-list"></i></span>Footer</a>
+    <a href="#" class="icon-a"><span class="icon"><i class="fas fa-users"></i></span>Users</a>
+    @endif
+
+    @if(auth()->user()->role === 'author' || auth()->user()->role === 'admin')
+    <a href="#" class="icon-a"><span class="icon"><i class="fas fa-comment"></i></span>Comments</a>
+    <a href="#" class="icon-a"><span class="icon"><i class="fas fa-users"></i></span>User Comments</a>
+    <a href="#" class="icon-a"><span class="icon"><i class="fas fa-blog"></i></span>Blog</a>
+    @endif
+</div>
+
+so here, everyone can access the first two links since they are not in "@if" statements, the middle section is accesible to only the admin, and the last section
+is accesible to both the admin and the author. (so basic user can acces only first section, admin can access all sections and author can access first and third.)
+-----------------------------------------------------------------------------------------------------------------------------
+Site And Dashboard Links => in our dashboard we have to links "View Website" and "Dashboard" which (everyone can access). lets make the links dynamic, go to
+"views/admin/sidebar.blade.php" and change the tags like this:
+
+<a href="{{route('front.index')}}" class="icon-a" target="_blank"><span class="icon"><i class="fas fa-eye"></i></span>View Website</a>
+<a href="{{route('dashboard')}}" class="icon-a"><span class="icon"><i class="fas fa-home"></i></span>Dashboard</a>
+
+here we added the "front.index" and "dashboard" routes, and for "View Website", because we wanna leave the dashboard we better open the page in a new tab,
+that's why we use "target="_blank"" inside the a tag.
+-----------------------------------------------------------------------------------------------------------------------------
+SEO => to create our SEO, let's first add the SEO meta tags to our front side. first go to "views/front/partials" and create a new file called "seo.blade.php",
+now before we add content to it, let's open "views/front/layouts/master.blade.php" and under stylesheet tags right before the "<title>" tag we include our seo
+page like this: "@include('front.partials.seo')". (you can also delete "title" tag here, we can put it in our dedicated "seo" file (below). now in
+"views/front/partials/seo.blade.php" add these dummy tags for now:
+
+	<title>The Company</title>
+    <meta name="description" content="">
+    <meta name="keywords" content="">
+    <meta property="og:site_name" value="">
+    <meta property="og:title" content="">
+    <meta property="og:url" content="">
+    <meta property="og:description" content="">
+    <meta name="twitter:title" content="">
+    <meta name="twitter:description" content="">
+	
+now we wanna make the content of these tags dynamic so we can change them in our dashboard and also we can easily add different SEO for different pages on
+our website, so we need to add a new table in our database called "seo" and we also need to create a new CRUD (create, read, update, delete) controller just
+like we did for the "users".
+*reminder--for every database table we want to create in laravel, we need a "model" to do the talking to that database table, and for every "model" we need
+a dedicated controller so we can define our CRUD functions and communicate with that "model".*
+so first we need to create a model, open the terminal (inside our laravel project folder obv) and run: "php artisan make:model Seo -m". here "-m" will also
+make "migration" for it so we can write our table items. now let's create the controller, inside the terminal run: 
+"php artisan make:controller Adminstrator/SeoController --resource". this will make a controller named "SeoController" inside "app/http/controllers/adminstrator",
+and the "--resource" will create all the CRUD methods(functions) automatically. now open this "SeoController" file and make sure at the top you're "using" the
+main controller(every controller we make needs to use the main controller), it should look like this: "use App\Http\Controllers\Controller;", now you can also
+delete all the "comments" inside the methods to make the code more clean.
+now go to "routes/web.php" and just like we made a route for our "users" we also make one for the "seo" so we can make use of the table in our template,
+so make a new route like this:
+
+Route::middleware(['auth'])->resource('/dashboard/seo', SeoController::class)->parameters(['seo' => 'id']);
+
+and as always make sure you're using the "SeoController" ath the top of this file to make this route work, like this :
+"use App\Http\Controllers\Adminstrator\SeoController;", now if you don't know how to call this route, just open the terminal and run: "php artisan route:list",
+and you will see all the CRUD route "names" for this route.
+now we wanna make a page in dashboard for "seo". let's go to "views/admin" and make a new folder called "seo". inside the folder make a file called
+"index.blade.php" and put a dummy test text in it. now to display this, go to "app/http/controllers/adminstrator/SeoController.php" and inside the "index"
+method add this:
+
+"return view('admin.seo.index');"
+
+now open this url and test it : "site-url/dashboard/seo".
+
+now go to "views/admin/users/index.blade.php" and copy everything and paste in "views/admin/seo/index.blade.php". we can delete the "@foreach" section
+for now. now go to "database/migrations" and open the file for the "seo" database. we have 8 meta tags that 3 of the are repetitive so we will make 6 rows in
+the "seo" table. so inside the "create" function add these(commented out lines "//" already exist, that's why they're commented out):
+
+// Schema::create('seos', function (Blueprint $table) {
+//  $table->id();
+    $table->string('title', length:300);
+    $table->string('description', length:1000);
+    $table->string('keywords', length:1000);
+    $table->string('site_name', length:200);
+    $table->string('site_url', length:200);
+    $table->string('twitter_name', length:200);
+//  $table->timestamps();
+// });
+
+now open the terminal and run: "php artisan migrate", and this will create our new table in our database.
+now go to "app/models/seo.php". for users we used "$fillable" to define the rows, but for "seo" we wanna save time and use "guarded", this will define the rows
+by itself based on the "id", so in the "Seo" class we add this:
+
+//  class Seo extends Model
+//  {
+//      use HasFactory;
+        protected $guarded = ['id'];
+//  }
+
+now let's go to "views/admin/sidebar.blade.php" and pass a "route" to "Website Seo" link. like this:
+
+<a href="{{route('seo.index')}}" class="icon-a"><span class="icon"><i class="fas fa-magic"></i></span>Website Seo</a>
+*reminder-- "seo.index" will run the "index" method in our "SeoController.php" file which will then "view" this file "views/admin/seo/index.blade.php".*
+
+now let's start making the "seo" dashboard page, inside this file ("views/admin/seo/index.blade.php") under the closing "table" tag let's add a button that
+takes us to the page where we wanna create a new "seo", like this:
+
+"<a href="{{route('seo.create')}}" class="panel-btn">New SEO</a>"
+
+"seo.create" route will run the "create" method in "SeoController"(which we will define in a bit), which will take us to the "create" page. now let's go to
+"views/admin/seo" and create a new file called: "create.blade.php". we can copy the contents of the "index" file inside the same folder, and paste inside this
+"create" page. but since we won't display the "seo" rows inside this file and we just wanna display a "form", we delete the whole "<table>" tag and also the
+"New Seo" link that we just created. now go to "app/http/controllers/adminstrator/SeoController.php" and inside the "create" method, add this:
+
+//    public function create()
+//    {
+        return view('admin.seo.create');
+//    }
+
+this way our "seo.create" route starts working. now go to this url: "site-url/dashboard/seo" and click on "New Seo" link and test it.
+-----------------------------------------------------------------------------------------------------------------------------
+Laravel Collective, Create Seo => from now on we will use laravel collective for our forms in the create page, to do that we first need to install laravel
+ collective html,you can visit laravel collective's website for all the instructions, but to install, open terminal and run:
+"composer require laravelcollective/html". now we wanna add the Collective forms to our "create" file, open "views/admin/seo/edit.blade.php", final code
+should look like this:
+
+
+@extends('admin.index')
+
+@section('content')
+    <div class="dynamic-content">
+        <h2>Create Seo</h2>
+        
+        {{!! Form::open(['route'=>'seo.store', 'method'=>'post']) !!}}
+
+            <div class="form-group">
+                {{!! Form::label('title', 'Website Title') !!}}
+                {{!! Form::text('title', null, ['class'=>'form-control', 'placeholder'=>'This is the title']) !!}}
+                @error('title')
+                    <p class="text-danger my-2">{{$message}}</p>
+                @enderror
+            </div>
+
+            <div class="form-group">
+                {{!! Form::label('keywords', 'Keywords') !!}}
+                {{!! Form::textarea('keywords', null, ['class'=>'form-control', 'placeholder'=>'Seperate keywords using ","']) !!}}
+                @error('keywords')
+                    <p class="text-danger my-2">{{$message}}</p>
+                @enderror
+            </div>
+
+            <div class="form-group">
+                {{!! Form::label('description', 'About your website') !!}}
+                {{!! Form::textarea('description', null, ['class'=>'form-control', 'placeholder'=>'Write about your website']) !!}}
+                @error('description')
+                    <p class="text-danger my-2">{{$message}}</p>
+                @enderror
+            </div>
+
+            <div class="form-group">
+                {{!! Form::label('site_name', 'Website name') !!}}
+                {{!! Form::text('site_name', null, ['class'=>'form-control', 'placeholder'=>'Enter website name']) !!}}
+                @error('site_name')
+                    <p class="text-danger my-2">{{$message}}</p>
+                @enderror
+            </div>
+
+            <div class="form-group">
+                {{!! Form::label('site_url', 'Website URL') !!}}
+                {{!! Form::text('site_url', null, ['class'=>'form-control', 'placeholder'=>'Enter website URL']) !!}}
+                @error('site_url')
+                    <p class="text-danger my-2">{{$message}}</p>
+                @enderror
+            </div>
+
+            <div class="form-group">
+                {{!! Form::label('twitter_name', 'Twitter name') !!}}
+                {{!! Form::text('twitter_name', null, ['class'=>'form-control', 'placeholder'=>'Your Twitter name']) !!}}
+                @error('twitter_name')
+                    <p class="text-danger my-2">{{$message}}</p>
+                @enderror
+            </div>
+
+            <div class="form-group">
+                {{!! Form::label('twitter_description', 'About you on Twitter') !!}}
+                {{!! Form::text('twitter_description', null, ['class'=>'form-control', 'placeholder'=>'About your Twitter']) !!}}
+                @error('twitter_description')
+                    <p class="text-danger my-2">{{$message}}</p>
+                @enderror
+            </div>
+
+            {{!! Form::submit('Submit', ['class'=>'panel-btn']) !!}}
+
+        {{!! Form::close() !!}}
+
+    </div>
+@endsection
+
+
+Firstly, our Laravel Collective HTML needs to be inside this tag: {{!!  !!}}
+then for creating a from in laravel collective we use "Form::open()", which takes and array with two items, "route" and "method", because we wanna "create" a
+row in the database we use the "seo.store" method(which we will define in a bit), and for method we use "post" and we don't need to use "@csrf" or
+"@method('put')" inside the form, because laravel collective takes care of that.
+for every input we are also creating a "label" like this: "Form::label", which takes two values, first: "name" and the second: the "text" of the label tag.
+for inputs we don't need to mention "input", for example for a "text" input we just write "Form::text" which takes 3 values. First: "name" (which should be the
+same with the label), Second: "value" which in this page we'll use "null" becuase inputs should be empty(you can't leave it empty), and Third: an array
+containing all other "attributes" that we wanna give the input. here we are giving "class" and "placeholder" attributes.
+then we have "errors" which are the same as we used them before.
+to submit the form we use "Form::submit" which takes to parameters, "name" and an "array" containing other attributes.
+finally to close the laravel collective form we use "Form::close()".
+-----------------------------------------------------------------------------------------------------------------------------
+Migrations Rollback => we frogot to add one item to our "seo" database called "twitter_description", so this this is a great opportunity to learn about
+migrations rollback, which deletes the last migration we added to the database which was the "seo". open terminal and run "php artisan migrate:rollback",
+now go to "database/migrations" and open the "seo" file, in the items we added, add this one before the "timestamp" item:
+"$table->string('twitter_description', length:1000);". now open the terminal and run: "php artisan migrate". now you can go to your "phpmyadmin" and check
+it out!
+-----------------------------------------------------------------------------------------------------------------------------
+SEO Store => when we sumbit this form it will execute "seo.store" to create a new row in "seo" table in DB. so let's define this method in our SeoController,
+go to "app/http/controllers/adminstrator/SeoController.php" and inside the "store" method add this :
+
+//public function store(Request $request)
+//    {
+          Seo::create([
+              'title'=>$request->title,
+              'keywords'=>$request->keywords,
+              'description'=>$request->description,
+              'site_name'=>$request->site_name,
+              'site_url'=>$request->site_url,
+              'twitter_name'=>$request->twitter_name,
+              'twitter_description'=>$request->twitter_description,
+          ]);
+
+          $request->session()->flash('create');
+          return redirect()->route('seo.index');
+//    }
+
+Firstly because we're connecting to the "Seo" model here, you should be using "use App\Models\Seo;" at the top of the file.
+after we create the new row using "Seo::create", we are adding "create" in the session so when can use it in the SEO "index" page to display a sweetalert when
+"create" session is passed to the page. finally we redirect the user to "seo.index" after everything is done.
+now go to "views/admin/seo/index.blade.php" and in the "js" section there should be a "sweetalert" (that we copied from another page but didn't delete) and
+pass it the "create" name and change the alert text accordingly. now you can go to your "create" seo page in dashboard and create a new row and test it out.
+-----------------------------------------------------------------------------------------------------------------------------
+Displaying SEO => now we wanna display the "SEO" rows inside the "index". for this we first go to "app/http/controllers/adminstrator/SeoController.php" and
+inside the "index" method we change it like this:
+
+//public function index()
+//{
+      $seos = Seo::all();
+      return view('admin.seo.index', compact('seos'));
+//}
+
+inside "$seos" variable we're getting all of the "seo" rows and in "compact" we are sending it to the "index" page of the seo. so now we have to go to 
+"views/admin/seo/index.blade.php", first let's make a "@foreach" tag right where we deleted it earlier (inside the table, under the closing </tr> tag). like this:
+
+
+    @foreach ($seos as $item)
+        <tr>
+            <td>{{ $item->title }}</td>
+            <td>{{ $item->keywords }}</td>
+            <td>{{\Illuminate\Support\Str::Limit($item->description, 30)}}</td>
+            <td>{{ $item->site_name }}</td>
+            <td>{{ $item->site_url }}</td>
+            <td>{{ $item->twitter_name }}</td>
+            <td>{{\Illuminate\Support\Str::Limit($item->twitter_description, 30)}}</td>
+            <td><a href="{{ route('seo.edit', $item->id) }}" class="text-white text-decoration-none"><i class="fas fa-edit"></i></a></td>
+            <td><a href="" class="text-decoration-none text-danger" onclick="destroySeo(event, {{ $item->id }})">حذف</a></td>
+            <form action="{{ route('seo.destroy', $item->id) }}" method="post"
+            id="delete-seo-{{ $item->id }}">
+                @csrf
+                @method('delete')
+            </form>
+        </tr>
+    @endforeach
+
+
+here, inside the "@foreach" we can access "@seos" that we sent using the "index" method, like this : "@foreach ($seos as $item)".
+using "$item" we are retrieving all our "seo" items and putting them inside the "<td>" tags.
+
+Laravel has lots of "helpers" which you find them on their website, in the helpers section, here to limit the "description" and also "twitter_description" we
+use "Str::Limit" helper to limit the characters we display in the seo "index" page, since we are not in a backend laravel file, we can't "use" functions at
+the top of the file, but since we can use laravel code inside the "{{ }}" tags, we can just "use" them inside these tags, but we have to use them inside of
+every tag we wanna use, we can't "use" them just once. and it takes two parameters: First: the text which here it is : "$item->description",
+Second: the number of characters.
+
+we also added an "edit" tag which executes "seo.edit" route, which we are yet to define.
+then finally we added a "<td>" that displays a delete link, which when we click runs a "js" function which then submits the "form" which is under the "delete"
+link(just like we did for the "users"). we should already have that "js" function in this "index" page since we copied everything from the "users" index page,
+but since we changed the function name and ids in the "foreach" above, just adjust those in the JS function too.
+*don't forget to adjust the names of header "<th>" tags in the first "<tr>" in this page to match your "<td>" items.*
+*also don't forget to add your own CSS and Bootstrap Styles to your forms, buttons etc.*
+-----------------------------------------------------------------------------------------------------------------------------
+Delete Seo => we made a delete form  for every "seo" row that gets displayed in the "index" page, and we gave it the route of "seo.destroy", now to make it
+work, let's go to "app/http/controllers/adminstrator/SeoController" and inside the "destroy" function add these:
+
+//public function destroy($id)
+//{
+      $seo = Seo::findOrFail($id);
+      $seo->destroy($id);
+      return redirect()->route('seo.index');
+//}
+
+no need to explain this, we explained it in the "users" section, and it's quite simple.
+-----------------------------------------------------------------------------------------------------------------------------
+Seo Edit => let's make a file for our "edit" page so we can edit individual "seo" items, go to "views/admin/seo" and create a new file called "edit", since
+this page will be very similiar to the "create" page, we can copy everything from there. we will adjust this page, but first let's go back to "SeoController"
+again and inside "edit" method we wanna add code to display the "edit" page that we just created and also pass the "id" of the "seo" item that was clicked,
+like this:
+
+//public function edit($id)
+//{
+      $seos = Seo::findOrFail($id);
+      return view('admin.seo.edit', compact('seos'));
+//}
+
+now if we go to our seo "index" page and click on an item to "edit" it should take us to the "edit" page, so test it out.
+now open "views/admin/seo/edit.blade.php", and here wanna display the "seo" contents inside every input since this is an edit page. so remember we said in
+laravel collective "inputs" we have three attributes and the second one is "value" and we left it "null", now we wanna display the contents in this page, so
+instead of "null" we use "old()" and inside it we add the item name, like this: "old('site_url')".
+now to retrieve that "seo" row from the "$seos" variable that we sent from the "index" page using "seo.edit" function, inside the "Form::open", add "$seos"
+as the first argument, to recieve the data in our form.
+one important thing here is that because we're retrieving information in this Laravel Collective "form" using "$seos" we can't use "Form::open" anymore, since
+that is only for sending information, so we have to use "Form::model".
+then we change the route to "seo.update" to run the "update" function in the SeoController which we will define in a bit.
+but since we are "updating" we also need to pass the "id" here, so cut the "seo.update", in it's place, open an array, first item should be "seo.update", and
+the second item should be the id, and since we are receiving the id  with "$seos" we can write "$seos->id".
+now because we are using "update" route, we can't use the "post" method, and also we can't use "post" when we're using "Form::model", so we have to use "put".
+and this is how our final work inside the edit file should look like:
+
+
+@extends('admin.index')
+
+@section('content')
+    <div class="dynamic-content">
+        <h2>Edit SEO</h2>
+        
+        {{!! Form::model($seos, ['route'=>['seo.update', $seos->id], 'method'=>'put']) !!}}
+
+            <div class="form-group">
+                {{!! Form::label('title', 'Website title') !!}}
+                {{!! Form::text('title', old('title'), ['class'=>'form-control', 'placeholder'=>'This is the website title']) !!}}
+                @error('title')
+                    <p class="text-danger my-2">{{$message}}</p>
+                @enderror
+            </div>
+
+            {{!! Form::submit('Submit', ['class'=>'panel-btn']) !!}}
+
+        {{!! Form::close() !!}}
+
+    </div>
+@endsection
+
+
+*we should have 7 "form-group" containers here, but i didn't wanna put them all here.*
+go to your "edit" url and make sure it's working properly. now we wanna define the "update" method. go to "app/http/controllers/adminstrator/SeoController.php",
+and inside the "update" method, add this:
+
+    public function update($request, $id)
+    {
+        Seo::findOrFail($id)->update([
+            'title'=>$request->title,
+            'keywords'=>$request->keywords,
+            'description'=>$request->description,
+            'site_name'=>$request->site_name,
+            'site_url'=>$request->site_url,
+            'twitter_name'=>$request->twitter_name,
+            'twitter_description'=>$request->twitter_description,
+        ]);
+
+        $request->session()->flash('update');
+        return redirect()->route('seo.index');
+    }
+	
+this time we directly connected the "update()" function to the "Seo::findOrFail($id)" which also works(just don't assign it to a variable because it won't run!).
+so here we are assigning "update" session, we can use it in "views/admin/seo/index.blade.php", so open this index file, in the bottom in the "@section('js')"
+there already is a "sweetalert" with the name "create", just copy it and paste under it, and change the name and alert content accordingly.
+now you can edit an item and test everything out.
+-----------------------------------------------------------------------------------------------------------------------------
+Display SEO In Fron => because we are trying to display "seo" row in the front page of our website, we need to make a controller for it, so in terminal
+type: "php artisan make:controller Front/HomeController", this will make a new folder inside our "controllers" folder and make a new file in it called 
+"HomeController", we didn't add "--resource" because we don't wanna use "CRUD", we only wanna display the "seo" row.
+now first, let's open this new "HomeController" file and in the "Home Controller" class add this function:
+
+public function index() {
+    $seo = Seo::orderBy('id', 'desc')->take(1)->first();
+    return view('front.index', compact('seo'));
+}
+
+make sure at the top of the page you are "using" this: "use App\Models\Seo;".
+here we are getting calling the "seo" rows, based on "id" and in "desc" order, which will get the row with the "biggest" id number(which is the last row added),
+then we only take one item using "take(1)", and then we can use "first()" or "get()", but because "get" will return an "array" regardless of if it's only just
+1 or multiple items, we will have to use "@foreach" when we try to display it, but "first" will give us a single "json" file. so here we use "first()".
+and then we "view" the "front.index" which is our website front page file, while also sending the fetched "seo" row alongside it.
+now let's open "views/front/partials/seo.blade.php" and delete everything and paste this instead:
+
+@if (!empty($seo))
+    <title>{{$seo->title}}</title>
+    <meta name="description" content="{{$seo->description}}">
+    <meta name="keywords" content="{{$seo->keywords}}">
+    <meta property="og:site_name" value="{{$seo->site_name}}">
+    <meta property="og:title" content="{{$seo->title}}">
+    <meta property="og:url" content="{{$seo->site_url}}">
+    <meta property="og:description" content="{{$seo->description}}">
+    <meta name="twitter:title" content="{{$seo->twitter_description}}">
+    <meta name="twitter:description" content="{{$seo->twitter_description}}">
+@else
+    <title>شرکت سازمانی سازمان</title>
+    <meta name="description" content="">
+    <meta name="keywords" content="">
+    <meta property="og:site_name" value="">
+    <meta property="og:title" content="">
+    <meta property="og:url" content="">
+    <meta property="og:description" content="">
+    <meta name="twitter:title" content="">
+    <meta name="twitter:description" content="">
+@endif
+
+here we are checking if the "$seo" is not empty, display the all the "seo" items, and if empty, display our static "seo" tags.
+now you can visit your website front page, go to "inspect" (ctrl+U) and check if you are successfully fetching the "seo".
+-----------------------------------------------------------------------------------------------------------------------------
+SideBar Active Links => let's make sure that in our dashboard sidebar, whenever we click a link and visit that section of the dashboard, the link color will
+change, just like when we "hover" on the links for example. for this first go to your "CSS" file for the "back" and make define style for a class that
+is called for example: ".is-active", and give the necessary styles to it. now go to "views/admin/sidebar.blade.php" and add this "@if" statement inside "a"
+tags' class attributes:
+"@if(request()->is('dashboard/seo')) is-active @endif"
+the "route" for this "<a>" tag is "seo.index", but "request()" refers to the "URL" so we have to pass it the "URL" that the "route" in the "href" inside the "a"
+tag is taking us to. so now when we visit any of the "URLs" that exist inside these "a" tags, the "is-active" calss will be added and style will be activated.
+you can now test things out.
+-----------------------------------------------------------------------------------------------------------------------------
+Middleware / Admin Middleware => if you log out, and log in again as a basic user or an "auth", you won't have access to the sidebar links that are specific to
+the admin, but if you type in the url for "users" page for example, you will be able to see it! tha's because we haven't added "middlewares" for our new routes
+"users", "seo" etc. yet.  if you open "routes/web.php" you'll see that our "dashboard" route has a middleware that checks if the visitor is "auth()", before
+they can visit the dashboard. now wanna add middleware to our other routes.
+so to make a new middleware, open terminal and type: "php artisan make:middleware isAdminMiddleware", this will make a middleware called "isAdminMiddleware:,
+obv the name is optional.
+now to make this middleware work, first we need to add it to "kernel.php" at "app/http/kernel.php", so we can use it inside this laravel project, so open this
+kernel file, inside the "protected $routeMiddleware", after the "'auth.basic'" item, add this item: "'admin' => \App\Http\Middleware\isAdminMiddleware::class,".
+(we will use the name "admin" to pass it as an argument to "middleware" function in our "routes").
+now we need to define our middleware, so open the middleware we just created at "app/http/middleware/isAdminMiddleware.php" and inside "handle" method, add this:
+
+//public function handle(Request $request, Closure $next)
+//    {
+          if(auth()->user()->role !== 'admin') {
+              return redirect()->route('dashboard');
+          }
+//        return $next($request);
+//    }
+
+this will check the if the user's role isn't "admin" and if that's true(it isn't admin) it will redirect them to the "dashboard" index page.
+now finally we need to add this new middleware to our routes, so open "routes/web.php" and add "admin" to the "middleware" inside our "routes" like this:
+
+Route::middleware(['auth', 'admin'])->resource('/dashboard/users', UserController::class)->parameters(['users' => 'id']);
+Route::middleware(['auth', 'admin'])->resource('/dashboard/seo', SeoController::class)->parameters(['seo' => 'id']);
+
+now go back to dashboard as a basic "user" and type in the "url" to for example "users", it should redirect us to the main dashboard page.
+-----------------------------------------------------------------------------------------------------------------------------
+Seo Empty From Error => if you visit the page to "create" or "edit" seo, and try to submit form with an empty input, it will throw an error, to handle the
+"errors" in the "users" section we created a "$request->validate()" inside the "update" method in "userController". but for SEO we wanna do this the more
+standard way. so first open terminal and type "php artisan make:request Adminstrator/Seo/CreateSeoRequest".
+now first open "database/migrations" and open the "seos" migration file, you can keep this open for reference to see our requirements
+for our "seo" table. so now open "CreateSeoRequest" file we just created at "app/http/requests/Adminstrator/Seo/CreateSeoRequest.php".
+now in the "authorize()" method change "return false;" to "return true;", otherwise the second method "rules" will not run. now in the second method, after
+we add everything, we should have this:
+
+public function rules()
+    {
+        return [
+            'title' => ['required', 'max:300'],
+            'description' => ['required', 'max:1000'],
+            'keywords' => ['required', 'max:1000'],
+            'site_name' => ['required', 'max:200'],
+            'site_url' => ['required', 'max:200'],
+            'twitter_name' => ['required', 'max:200'],
+            'twitter_description' => ['required', 'max:1000'],
+        ];
+    }
+	
+now that we created this request, how can we use it? so let's go to "app/http/controllers/adminstrator/SeoController.php" and firstly, in the parameters of
+the "store" method, we have a "Request", replace that with "CreateSeoRequest", so now we should have:
+
+"public function store(CreateSeoRequest $request)"
+
+and to make "CreateSeoRequest" work we also need to make sure we use it at the top of the file, like: "use App\Http\Requests\Adminstrator\Seo\CreateSeoRequest;".
+*make sure in your SEO "create" and "edit" files you have "@error" set up to display the errors.*
+now you can go to your seo "create" url and test if it throws and displays an error when you try to submit an empty form.
+*friendly reminder that you should make sure your "CSS" and "BootStrap" is looking as it should, as we're adding new elements to our website.*
+
+now we also need to make a "UpdateSeoRequest" for editing/updating the form, so again open the terminal and type:
+"php artisan make:request Adminstrator/Seo/CreateSeoRequest". now open it at "app/http/requests/Adminstrator/Seo/UpdateSeoRequest.php", and like before,
+in the "authorize()" method change "return false;" to "return true;". and then we can just copy whatever we had in our "CreateSeoRequest" to here, so we have:
+
+public function rules()
+    {
+        return [
+            'title' => ['required', 'max:300'],
+            'description' => ['required', 'max:1000'],
+            'keywords' => ['required', 'max:1000'],
+            'site_name' => ['required', 'max:200'],
+            'site_url' => ['required', 'max:200'],
+            'twitter_name' => ['required', 'max:200'],
+            'twitter_description' => ['required', 'max:1000'],
+        ];
+    }
+	
+now to make this work we go to "app/http/controllers/adminstrator/SeoController.php" and like before, in the parameters ofthe "update" method, we have a
+"Request", replace that with "UpdateSeoRequest", so now we should have: "public function update(UpdateSeoRequest $request, $id)".
+we also need to make sure we use it at the top of the file, like: "use App\Http\Requests\Adminstrator\Seo\UpdateSeoRequest;".
+now visit your SEO "update/edit" page and try to update the from with an empty input and test everything out. that's all for SEO.
+-----------------------------------------------------------------------------------------------------------------------------
+*from now on we will try to spend less time on explaining, since we should be more familiar with things by now.*
+-----------------------------------------------------------------------------------------------------------------------------
+Top Header => now we wanna make the items on our top header(Email, Phone, Social media) dynamic, first we make a new model, open terminal and run:
+"php artisan make:model TopHeader -m", this will make a model called "TopHeader" and it will also make the "migrations" file for it.
+now in "migrations" folder, open "topheader" file and add this:
+
+//public function up()
+//    {
+//        Schema::create('top_headers', function (Blueprint $table) {
+//            $table->id();
+              $table->string('email', length:200);
+              $table->string('phone', length:200);
+              $table->string('instagram', length:200);
+              $table->string('facebook', length:200);
+              $table->string('twitter', length:200);
+//            $table->timestamps();
+//        });
+//    }
+
+now open "TopHeader" Model and in the "TopHeader" class under "use HasFactory;" add this:  "protected $guarded = ['id'];".
+now in terminal, run "php artisan migrate" to migrate our new table.
+then we make the controller, in terminal run: "php artisan make:controller Adminstrator/TopHeaderController --resource"
+
+in "view/admin" make a folder "topheader", inside the folder make a file called "index.blade.php",
+now open "web.php" and make a route for our "topheader" like this:
+
+Route::middleware(['auth', 'admin'])->resource('/dashboard/topHeader', TopHeaderController::class)->parameters(['topHeader' => 'id']);
+*(use TopHeaderController at top of the file)*
+
+now in "TopHeaderController.php" file, in the index, add this:
+
+//    public function index()
+//    {
+          $topHeader = TopHeader::paginate(4);
+          return view('admin.topheader.index', compact('topHeader'));
+//    }
+*(use TopHeader model at top of the page)*
+
+this will display the "topheader" index page and also pass it the "topheader" rows.
+
+Index page -> you can copy the "index" page of the "SEO" and paste it in the index of the "topheader". now "comment out" the "@foreach" section for now.
+change the texts accordingly(i'm not gonna copy the codes here).
+now for the "create" page in the folder of the "topheader" next to "index" make a new file called "create.blade.php",
+in the "TopHeaderController" add this:
+
+//public function create()
+//{
+	  return view('admin.topheader.create');
+//}
+
+now cpy everything from the SEO "create" page into the topeheader "create" page, now change everything accordingly. (we should have 5 "form-group" containers,
+in the form in this page because we created 5 items in our database table. and make sure you cahnge the route too.)
+now inside the "TopHeaderController.php", add this inside the "store" method:
+
+//public function store(Request $request)
+//{
+      TopHeader::create([
+          'email'=>$request->email,
+          'phone'=>$request->phone,
+          'instagram'=>$request->instagram,
+          'facebook'=>$request->facebook,
+          'twitter'=>$request->twitter
+      ]);
+
+      $request->session()->flash('create');
+      return redirect()->route('topHeader.index');
+//}
+*(make sure to use "TopHeader" at top of the file)*
+*(make sure in "index" file names of the "create" session is set properly.)*
+
+now go to your "create" page and submit a new form and test everything.
+
+Index Page Display Rows => now if you "commented out" the "@foreach" section inside TopHeader "index" file, undo it and change the routes accordingly and
+test it and display the Row items in the page.
+
+TopHeader Edit -> after you pu the "edit" page route inside the "index" page, now open "TopHeaderController.php" and inside the "edit" method, add this:
+
+//public function edit($id)
+//{
+      $topHeader = TopHeader::findOrFail($id);
+      return view('admin.topheader.edit', compact('topHeader'));
+//}
+*(make sure at the top of the file you use "TopHeader")*
+
+now inside the "topheader" folder make another file "edit.blade.php" and copy the contents of SEO "edit" file and paste in it. now because we passed "$TopHeader"
+to the "edit" page, we can use it like this:
+
+{{!! Form::model($topHeader, ['route'=>['topHeader.update', $topHeader->id], 'method'=>'put']) !!}}
+
+make sure everything else on the page is properly set according to the "topheader" table. now open "TopHeaderController.php" and in the "update" method, add:
+
+
+//public function update(Request $request, $id)
+//{
+      $topHeader = TopHeader::findOrFail($id);
+      $topHeader->update([
+          'email'=>$request->email,
+          'phone'=>$request->phone,
+          'instagram'=>$request->instagram,
+          'facebook'=>$request->facebook,
+          'twitter'=>$request->twitter
+      ]);
+
+      $request->session()->flash('update');
+      return redirect()->route('topHeader.index');
+//}
+
+now go back to topheader "index" file and make sure the "update" sweetalert "js" function is set. now go to "topheader" index page and click on an item to edit,
+and in the edit page submit a new form and check if it's working.
